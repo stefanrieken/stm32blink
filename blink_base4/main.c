@@ -89,7 +89,7 @@ int main ()
 
 	// turn any existing value off
 	GPIOC_BASE[4] = (1 << 13); // BRR
-	delay(1000000); 
+	delay(500000); 
 
 	// And blink!
 	while (1) {
