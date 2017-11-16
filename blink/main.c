@@ -5,6 +5,10 @@
 // See ~/.arduino15/packages/stm32duino/hardware/STM32F1/2017.10.19/system/libmaple/stm32f1/include/series/gpio.h
 // See ~/.arduino15/packages/stm32duino/hardware/STM32F1/2017.10.19/system/libmaple/stm32f1/include/series/rcc.h
 
+volatile static uint32_t * GPIOC_BASE = (uint32_t *) 0x40011000; // General Purpose I/O
+volatile static uint32_t * RCC_BASE = (uint32_t *) 0x40021000; // Reset and Clock Control
+volatile static uint32_t * FLASH_BASE = (uint32_t *) 0x40022000; // Flash register
+
 static inline void delay(int amount)
 {
 	volatile int i;
@@ -12,11 +16,29 @@ static inline void delay(int amount)
 	}
 }
 
+// This is higly inspired on setupCLK in stm32duino bootloader
+static inline void setupCLK()
+{
+	// Enable High-Speed External (HSE) clock
+	// END not needed: clock speed
+	RCC_BASE[0] |= 0x00010001; // CR
+	while ((RCC_BASE[0] & 0x00020000) == 0); // wait for it to come on
+	// TODO flash prefetch buffer?
+	FLASH_BASE[0] = 0x00000012;
+	// Configure PLL.
+	RCC_BASE[1] |= 0x001D0400; /* CFGR: pll=72Mhz(x9),APB1=36Mhz,AHB=72Mhz */
+	RCC_BASE[0] |= 0x01000000; /* CR: enable the pll */
+	while ((RCC_BASE[0] & 0x03000000) == 0); // wait for it to come on
+	// Set PLL as SysCLK
+	RCC_BASE[1] |= 0x00000002;
+	while ((RCC_BASE[1] & 0x00000008) == 0); // CFGR: wait for it to come on
+}
+
 int main ()
 {
-	volatile static uint32_t * GPIOC_BASE = (uint32_t *) 0x40011000; // General Purpose I/O
-	volatile static uint32_t * RCC_BASE = (uint32_t *) 0x40021000; // Reset and Clock Control
-
+	// Optional: if you skip setupCLK, it will just blink much slower
+	setupCLK();
+	
 	// Reset port C (value 4)
 	RCC_BASE[3] |= 1 << 4; // APB2RSTR, Advanced Peripheral Bus 2 Reset Register
 	RCC_BASE[3] &= ~(1 << 4);
