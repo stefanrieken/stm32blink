@@ -32,10 +32,10 @@ int main ()
 
 	// And blink!
 	while (1) {
-		GPIOC_BASE[4] = (1 << 13); // BSSR
+		GPIOC_BASE[5] = (1 << 13); // BSSR
 		delay(1000000);
-		//GPIOC_BASE[4] = (1 << (13+16)); // alternative: mirror previous using BRR
-		GPIOC_BASE[5] = (1 << 13); // BRR
+		//GPIOC_BASE[5] = (1 << (13+16)); // alternative: mirror previous using BRR
+		GPIOC_BASE[4] = (1 << 13); // BRR
 		delay(1000000); 
 	}
 }
